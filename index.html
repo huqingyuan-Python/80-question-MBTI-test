@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>心智坐标 | MBTI 80题深度性格测评</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #ffffff;
+            --accent: #74b9ff;
+            --text-main: #ffffff;
+            --glass-bg: rgba(255, 255, 255, 0.12);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --blur: 20px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        /* 背景设置 */
+        body {
+            font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: var(--text-main);
+            overflow-x: hidden;
+            /* 叠加黑色遮罩以保护可读性 */
+            background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), 
+                        url('file/background.jpg') no-repeat center center fixed;
+            background-size: cover;
+        }
+
+        /* 顶部导航标题栏 */
+        .navbar {
+            width: 100%;
+            padding: 15px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .logo-area { display: flex; flex-direction: column; }
+        .logo { font-size: 20px; font-weight: 800; letter-spacing: 1px; display: flex; align-items: center; gap: 8px; }
+        .sub-logo { font-size: 11px; opacity: 0.6; font-weight: 300; margin-top: 2px; letter-spacing: 0.5px; }
+        
+        /* 个人链接样式 */
+        .author-link {
+            color: inherit;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border-bottom: 1px solid transparent;
+        }
+        .author-link:hover {
+            opacity: 1;
+            color: var(--accent);
+            border-bottom: 1px solid var(--accent);
+        }
+
+        /* 主容器 */
+        .main-container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            padding: 20px;
+        }
+
+        /* 玻璃拟态卡片 */
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(var(--blur));
+            -webkit-backdrop-filter: blur(var(--blur));
+            border: 1px solid var(--glass-border);
+            border-radius: 30px;
+            padding: 40px;
+            width: 100%;
+            max-width: 600px;
+            box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.4);
+            display: none;
+            animation: slideUp 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        .active { display: block; }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* 答题进度样式 */
+        .progress-section { margin-bottom: 30px; }
+        .progress-track {
+            height: 6px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        #progress-fill {
+            height: 100%;
+            background: var(--accent);
+            width: 0%;
+            transition: width 0.4s ease;
+        }
+
+        /* 题目样式 */
+        h2 { font-size: 22px; margin-bottom: 30px; font-weight: 400; line-height: 1.6; }
+        
+        .option-item {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 18px 25px;
+            margin-bottom: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .option-item:hover { 
+            background: rgba(255, 255, 255, 0.15); 
+            transform: scale(1.02); 
+            border-color: var(--accent);
+        }
+        .option-dot { width: 10px; height: 10px; border: 1.5px solid white; border-radius: 50%; }
+
+        .btn-group { display: flex; gap: 10px; margin-top: 20px; }
+        .action-btn {
+            padding: 12px 25px;
+            border-radius: 12px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            transition: 0.3s;
+        }
+        .primary-btn { background: var(--accent); color: white; width: 100%; padding: 18px; font-size: 18px; }
+        .secondary-btn { background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.7); border: 1px solid rgba(255,255,255,0.1); }
+
+        /* 结果样式 */
+        .result-top { text-align: center; margin-bottom: 30px; }
+        .res-badge { font-size: 60px; margin-bottom: 10px; }
+        .res-code { font-size: 50px; font-weight: 800; letter-spacing: 5px; margin: 10px 0; }
+        .res-title { font-size: 24px; color: var(--accent); font-weight: 600; }
+
+        .stat-row { margin-bottom: 18px; }
+        .stat-labels { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 6px; opacity: 0.8; }
+        .stat-bar-outer { height: 6px; background: rgba(0,0,0,0.3); border-radius: 3px; overflow: hidden; display: flex; }
+
+        .analysis-box {
+            background: rgba(0,0,0,0.2);
+            padding: 25px;
+            border-radius: 20px;
+            font-size: 15px;
+            line-height: 1.8;
+            margin-top: 25px;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .tag-group { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 15px; }
+        .tag { background: rgba(116, 185, 255, 0.15); border: 1px solid rgba(116, 185, 255, 0.3); padding: 3px 12px; border-radius: 20px; font-size: 11px; color: var(--accent); }
+    </style>
+</head>
+<body>
+
+<nav class="navbar">
+    <div class="logo-area">
+        <div class="logo"><i class="fas fa-compass"></i> 心智坐标 | MBTI</div>
+        <div class="sub-logo">
+            Driven by <a href="https://space.bilibili.com/3537122176797008?spm_id_from=333.1007.0.0" target="_blank" class="author-link">玩摄影的程序猿</a>
+        </div>
+    </div>
+    <div class="nav-links">
+        <i class="fas fa-history" id="resume-btn" title="恢复进度" style="cursor:pointer; margin-right:20px; opacity: 0.7;"></i>
+        <i class="fas fa-redo-alt" onclick="location.reload()" title="重置" style="cursor:pointer; opacity: 0.7;"></i>
+    </div>
+</nav>
+
+<div class="main-container">
+    <div id="welcome-screen" class="glass-card active">
+        <h1 style="font-size: 28px; margin-bottom: 15px; font-weight: 700;">探索你的性格本源</h1>
+        <p style="opacity: 0.8; line-height: 1.8; margin-bottom: 35px; font-weight: 300;">
+            欢迎使用 80 题全量版性格测评。通过这套基于荣格心理学的系统性问答，
+            我们将共同描绘出你独一无二的心理镜像。
+        </p>
+        <button class="action-btn primary-btn" onclick="startTest()">开启深度测评</button>
+        <p style="font-size: 11px; text-align: center; margin-top: 20px; opacity: 0.5;">
+            已开启自动进度保存 | 耗时约 12 分钟
+        </p>
+    </div>
+
+    <div id="quiz-screen" class="glass-card">
+        <div class="progress-section">
+            <div class="stat-labels">
+                <span id="q-count">01 / 80</span>
+                <span id="percent-val">0%</span>
+            </div>
+            <div class="progress-track"><div id="progress-fill"></div></div>
+        </div>
+        <h2 id="question-text">加载中...</h2>
+        <div id="options-box">
+            <div class="option-item" onclick="handleChoice('A')">
+                <div class="option-dot"></div>
+                <span id="opt-a-text">选项 A</span>
+            </div>
+            <div class="option-item" onclick="handleChoice('B')">
+                <div class="option-dot"></div>
+                <span id="opt-b-text">选项 B</span>
+            </div>
+        </div>
+        <div class="btn-group">
+            <button class="action-btn secondary-btn" onclick="goBack()"><i class="fas fa-chevron-left"></i> 上一题</button>
+        </div>
+    </div>
+
+    <div id="result-screen" class="glass-card">
+        <div class="result-top">
+            <div id="res-icon" class="res-badge">💼</div>
+            <div id="res-code" class="res-code">ESTJ</div>
+            <div id="res-name" class="res-title">总经理型</div>
+            <div class="tag-group" id="res-tags"></div>
+        </div>
+        <div id="res-bars"></div>
+        <div class="analysis-box">
+            <h4 style="margin-bottom:12px; color: var(--accent);"><i class="fas fa-id-card"></i> 深度性格肖像</h4>
+            <p id="res-desc" style="opacity:0.9"></p>
+            <div style="margin-top:20px; border-top:1px solid rgba(255,255,255,0.1); padding-top:20px;">
+                <p id="res-career" style="font-size:14px; font-weight: 500;"></p>
+            </div>
+        </div>
+        <button class="action-btn primary-btn" style="margin-top:30px;" onclick="resetTest()">返回首页</button>
+    </div>
+</div>
+
+<script>
+    // 逻辑部分保持不变，确保 80 题功能和 LocalStorage 正常运作
+    const questions = [
+        // EI (20)
+        {q:"在大型社交聚会上，你通常：", a:"积极结识新朋友，能量倍增", b:"只和熟悉的人聊天，感觉疲惫", t:"EI"},
+        {q:"你更喜欢哪种工作方式？", a:"与团队紧密合作，保持沟通", b:"独立思考，不受打扰", t:"EI"},
+        {q:"当电话铃响时，你通常：", a:"第一时间接听", b:"希望是短信或别人去接", t:"EI"},
+        {q:"新环境让你感到：", a:"兴奋，迫不及待融入", b:"警觉，需要观察一段时间", t:"EI"},
+        {q:"在长途旅行中，你：", a:"喜欢找旅伴聊天", b:"戴着耳机沉浸在自己的世界", t:"EI"},
+        {q:"你被认为是：", a:"容易接近的、外向的", b:"冷静的、内向的", t:"EI"},
+        {q:"如果你整个周末独自度过：", a:"感觉非常无聊，需要出门", b:"感觉非常充实且得到了治愈", t:"EI"},
+        {q:"在会议或讨论中，你通常：", a:"边思考边说出来", b:"想清楚后再完整表达", t:"EI"},
+        {q:"你的人际圈子通常是：", a:"广泛而多样化的", b:"小巧而深刻的", t:"EI"},
+        {q:"遇到困难时，你的反应是：", a:"找朋友商量解决", b:"自己先冷静分析", t:"EI"},
+        {q:"在休息日，你更倾向于：", a:"参加热闹的活动", b:"在安静的环境放松", t:"EI"},
+        {q:"别人对你的第一印象通常是：", a:"热情如火", b:"深沉似水", t:"EI"},
+        {q:"当你在公共场合等待时：", a:"常会和旁边的人打招呼", b:"低头关注自己的事", t:"EI"},
+        {q:"你觉得自己：", a:"话比较多", b:"比较沉默", t:"EI"},
+        {q:"你更喜欢哪种学习方式？", a:"小组讨论与互动", b:"静心研读与反思", t:"EI"},
+        {q:"当听到一个好消息，你：", a:"立刻想分享给全世界", b:"先在心里乐一乐", t:"EI"},
+        {q:"你社交后通常需要：", a:"更多活动来保持兴奋", b:"独处来重新充电", t:"EI"},
+        {q:"你的社交能量：", a:"随人越多越强", b:"随人越多消耗越快", t:"EI"},
+        {q:"你更喜欢：", a:"成为聚会的焦点", b:"在角落默默观察", t:"EI"},
+        {q:"别人认为你是个：", a:"快活的伙伴", b:"可靠的知己", t:"EI"},
+        // SN (20)
+        {q:"你更关注事物的：", a:"现实状态与具体细节", b:"未来意义与各种可能", t:"SN"},
+        {q:"你更信任哪种信息？", a:"过往的经验和事实数据", b:"内心的直觉和灵感", t:"SN"},
+        {q:"阅读说明书时，你通常：", a:"逐字逐句按步骤操作", b:"大概看看，凭直觉直接做", t:"SN"},
+        {q:"你被形容为一个：", a:"脚踏实地的务实派", b:"充满幻想的创意派", t:"SN"},
+        {q:"你更喜欢处理：", a:"具体而明确的任务", b:"抽象而宏观的概念", t:"SN"},
+        {q:"你观察世界时：", a:"关注每一个微小的零件", b:"关注整体的运作逻辑", t:"SN"},
+        {q:"你认为“常识”：", a:"是必须遵守的准则", b:"是有待质疑的老套路", t:"SN"},
+        {q:"在讲故事时，你注重：", a:"准确的时间和地点细节", b:"故事背后的隐喻和情感", t:"SN"},
+        {q:"你更倾向于：", a:"活在当下，享受此刻", b:"展望未来，规划蓝图", t:"SN"},
+        {q:"当遇到新问题，你会：", a:"寻找现成的成功方案", b:"发明一种全新的解法", t:"SN"},
+        {q:"你觉得哪种赞美更贴切？", a:"你非常有常识", b:"你非常有远见", t:"SN"},
+        {q:"你眼中的事实是：", a:"唯一的、确凿的", b:"多面的、可解释的", t:"SN"},
+        {q:"你更喜欢哪种电影？", a:"基于真实事件的纪实片", b:"充满想象力的科幻片", t:"SN"},
+        {q:"你对于琐事的态度：", a:"有耐心逐一处理", b:"容易感到枯燥且厌烦", t:"SN"},
+        {q:"你对新事物的态度：", a:"观察其实际价值", b:"思考其深远影响", t:"SN"},
+        {q:"你更像一个：", a:"执行者", b:"构思者", t:"SN"},
+        {q:"你更愿意学习：", a:"实用的技能", b:"深奥的理论", t:"SN"},
+        {q:"在做财务规划时，你关注：", a:"每一笔具体的支出", b:"长远的财富增值方向", t:"SN"},
+        {q:"你眼中的“传统”是：", a:"宝贵的智慧结晶", b:"沉重的历史包袱", t:"SN"},
+        {q:"你认为：", a:"看到才相信", b:"相信了就能看到", t:"SN"},
+        // TF (20)
+        {q:"做决定时，你更多：", a:"依靠逻辑和公平原则", b:"依靠个人价值观和情感", t:"TF"},
+        {q:"当朋友遇到困难，你首先：", a:"帮他分析原因并给建议", b:"给他情感支持和宽慰", t:"TF"},
+        {q:"你更看重一个人的：", a:"能力与效率", b:"品格与热忱", t:"TF"},
+        {q:"在争论中，你更在意：", a:"谁更有道理", b:"谁被伤害了感情", t:"TF"},
+        {q:"你被认为是一个：", a:"理智、客观的人", b:"感性、热心的人", t:"TF"},
+        {q:"评价他人时，你通常：", a:"基于其成就和贡献", b:"基于其动机和善良", t:"TF"},
+        {q:"拒绝别人让内感到：", a:"没什么大不了，实话实说", b:"非常抱歉，甚至寝食难安", t:"TF"},
+        {q:"你认为好的领导应该是：", a:"果断、公正、有原则", b:"亲和、体恤、有关怀", t:"TF"},
+        {q:"你对“正义”的理解是：", a:"公平竞争，奖惩分明", b:"仁慈宽容，保护弱小", t:"TF"},
+        {q:"在工作中，你更希望得到：", a:"专业技能的认可", b:"个人付出的感谢", t:"TF"},
+        {q:"当别人不讲理时，你：", a:"感到愤怒并直接反驳", b:"感到难受并尽量避开", t:"TF"},
+        {q:"你认为法律应该：", a:"严格执行，一视同仁", b:"酌情处理，考虑人性", t:"TF"},
+        {q:"面对冲突，你通常：", a:"直接面对，把话说开", b:"尽量回避，维持和谐", t:"TF"},
+        {q:"你觉得哪种评价更糟糕？", a:"说你感情用事", b:"说你冷酷无情", t:"TF"},
+        {q:"你做决定的速度通常：", a:"很快，基于分析", b:"较慢，基于权衡", t:"TF"},
+        {q:"你眼中的成功是：", a:"达成既定目标", b:"获得内心宁静", t:"TF"},
+        {q:"你更钦佩哪种人？", a:"意志坚定且清醒的人", b:"富有同情心且温婉的人", t:"TF"},
+        {q:"你觉得自己：", a:"头脑比心更重要", b:"心比头脑更重要", t:"TF"},
+        {q:"在批评别人时，你倾向：", a:"直接指出痛点", b:"先表扬再委婉建议", t:"TF"},
+        {q:"你对“真实”的态度：", a:"真相重于一切", b:"善良重于真相", t:"TF"},
+        // JP (20)
+        {q:"你更喜欢哪种生活节奏？", a:"井然有序，有清晰计划", b:"随性自然，保留选择余地", t:"JP"},
+        {q:"面对截止日期（DDL），你通常：", a:"提前很久就开始准备", b:"最后关头才最有动力", t:"JP"},
+        {q:"你的房间/办公桌：", a:"整洁有序，各归其位", b:"凌乱但有我的逻辑", t:"JP"},
+        {q:"当你去旅行时：", a:"预定好所有的酒店和行程", b:"只买机票，到那再说", t:"JP"},
+        {q:"计划被打乱时，你：", a:"感到焦虑和烦躁", b:"觉得刺激且充满惊喜", t:"JP"},
+        {q:"你更喜欢：", a:"做决定并得到结果", b:"继续探索并保留可能", t:"JP"},
+        {q:"你通常：", a:"先工作，再娱乐", b:"边工作边玩，或者先玩再说", t:"JP"},
+        {q:"你觉得自己：", a:"守时是一定要的", b:"随性一点没关系", t:"JP"},
+        {q:"在写报告或项目时：", a:"先列大纲，按步就班", b:"直接开写，随思绪流动", t:"JP"},
+        {q:"你喜欢的工作环境是：", a:"职责清晰、结构化", b:"自由度高、灵活变通", t:"JP"},
+        {q:"做决定对你来说：", a:"很快，不喜欢悬而不决", b:"很难，总觉得还有更好的", t:"JP"},
+        {q:"你倾向于使用：", a:"日程表和闹钟", b:"随缘的大脑记忆", t:"JP"},
+        {q:"你眼中的“规则”：", a:"是用来遵守并保证效率的", b:"是用来参考甚至是打破的", t:"JP"},
+        {q:"下班或放学后的时间：", a:"已经有了大致的计划", b:"看到时候的心情", t:"JP"},
+        {q:"你觉得哪种生活更有成就感？", a:"目标全部达成的掌控感", b:"经历各种奇遇的体验感", t:"JP"},
+        {q:"你更喜欢：", a:"把事情彻底了结", b:"开启一段新的尝试", t:"JP"},
+        {q:"你在处理琐事时：", a:"今天的事一定要今天做完", b:"明天再说也可以", t:"JP"},
+        {q:"你对“未知”：", a:"感到不安，想尽早确定", b:"感到有趣，想去冒险", t:"JP"},
+        {q:"你通常在社交群里：", a:"很快回复并处理问题", b:"潜水很久，有空才回", t:"JP"},
+        {q:"你认为生活应当：", a:"被掌控", b:"被体验", t:"JP"}
+    ];
+
+    const mbtiData = {
+        'ESTJ': { name: '总经理型', icon: '💼', tags: ['秩序', '奉献', '务实'], desc: '你是传统的守护者，擅长利用你的组织才能带领大家达成目标。', career: '理想环境：结构明确、尊重传统的职场。' },
+        'ENTJ': { name: '指挥官型', icon: '👑', tags: ['领导力', '自信', '意志'], desc: '你是天生的领导者，能够迅速发现低效并重新制定战略。', career: '理想环境：高挑战、竞争性强的企业高层。' },
+        'ISTJ': { name: '物流师型', icon: '📋', tags: ['诚信', '冷静', '责任'], desc: '你是社会最坚实的支柱，做事严谨、一丝不苟。', career: '理想环境：需要极高精确度和稳定性的岗位。' },
+        'INTJ': { name: '建筑师型', icon: '🔭', tags: ['战略', '独立', '理性'], desc: '你拥有极强的逻辑感和独立意志，总是追求事物的完美运作。', career: '理想环境：需要深层系统构建和长远规划的领域。' },
+        'ESTP': { name: '企业家型', icon: '⚡', tags: ['能量', '洞察', '直接'], desc: '你是行动派，喜欢在边缘行走，能够迅速察觉并处理突发状况。', career: '理想环境：快节奏、高风险、即时反馈的行业。' },
+        'ENTP': { name: '辩论家型', icon: '💡', tags: ['好奇', '辩论', '敏捷'], desc: '你是聪明且充满好奇心的思考者，无法拒绝任何智力上的挑战。', career: '理想环境：需要不断创新和颠覆传统的工作场景。' },
+        'ISTP': { name: '鉴赏家型', icon: '🛠️', tags: ['动手', '适应', '实用'], desc: '你喜欢用双手探索世界，在危机时刻能保持惊人的冷静。', career: '理想环境：允许独立操作和解决实际问题的技术环境。' },
+        'INTP': { name: '逻辑学家型', icon: '🔬', tags: ['理论', '逻辑', '原创'], desc: '你是天生的哲学家，总是在思考如何用逻辑解释万物。', career: '理想环境：高度自由、允许深度学术研究的机构。' },
+        'ESFJ': { name: '执政官型', icon: '🤝', tags: ['利他', '和谐', '周到'], desc: '你是社交达人，致力于通过关怀和奉献来建立和谐的社区。', career: '理想环境：需要高度共情和团队服务的公共领域。' },
+        'ENFJ': { name: '主人公型', icon: '🎤', tags: ['魅力', '共情', '激励'], desc: '你是富有魅力的领导者，能够看透他人的潜能并给予启发。', career: '理想环境：教育、心理咨询或社会影响力驱动的行业。' },
+        'ISFJ': { name: '守卫者型', icon: '🛡️', tags: ['忠诚', '耐心', '温厚'], desc: '你是最温柔的守护者，在幕后默默地用责任感温暖着周围。', career: '理想环境：温馨、稳定且能切实帮助到他人的工作。' },
+        'INFJ': { name: '提倡者型', icon: '✨', tags: ['远见', '深度', '使命'], desc: '你是深沉的理想主义者，拥有一套坚定的内在价值观。', career: '理想环境：追求精神成长和社会积极改变的非营利组织。' },
+        'ESFP': { name: '表演者型', icon: '🎉', tags: ['热情', '美感', '自发'], desc: '你是生活舞台上的焦点，总是能带给周围人无尽的快乐。', career: '理想环境：充满活力、社交频繁且具有艺术感的工作场所。' },
+        'ENFP': { name: '竞选者型', icon: '🌟', tags: ['创意', '自由', '热情'], desc: '你是自由的精神，总是在寻找人与事之间那条无形的纽带。', career: '理想环境：多样化、鼓励自我表达的初创企业或创意工坊。' },
+        'ISFP': { name: '探险家型', icon: '🎨', tags: ['美学', '灵活', '低调'], desc: '你是随性的艺术家，喜欢用作品表达内心世界，不随波逐流，享受感官带来的美好。', career: '理想环境：允许独立创作、节奏自由且注重细节的岗位。' },
+        'INFP': { name: '调解员型', icon: '🌷', tags: ['理想', '纯粹', '同情'], desc: '你是敏感且富有创造力的灵魂，对生活充满深切的情感连接。', career: '理想环境：安静、尊重个性且充满人文关怀的领域。' }
+    };
+
+    let currentIndex = 0;
+    let scores = { E:0, I:0, S:0, N:0, T:0, F:0, J:0, P:0 };
+    let history = [];
+
+    function startTest() {
+        document.getElementById('welcome-screen').classList.remove('active');
+        document.getElementById('quiz-screen').classList.add('active');
+        showQuestion();
+    }
+
+    function showQuestion() {
+        const q = questions[currentIndex];
+        document.getElementById('question-text').innerText = q.q;
+        document.getElementById('opt-a-text').innerText = q.a;
+        document.getElementById('opt-b-text').innerText = q.b;
+        
+        const percent = Math.round((currentIndex / 80) * 100);
+        document.getElementById('progress-fill').style.width = percent + '%';
+        document.getElementById('percent-val').innerText = percent + '%';
+        document.getElementById('q-count').innerText = `${String(currentIndex + 1).padStart(2, '0')} / 80`;
+        
+        localStorage.setItem('mbti_snapshot', JSON.stringify({ currentIndex, scores, history }));
+    }
+
+    function handleChoice(val) {
+        const q = questions[currentIndex];
+        const point = (val === 'A') ? q.t[0] : q.t[1];
+        scores[point]++;
+        history.push(point);
+        
+        currentIndex++;
+        if(currentIndex < 80) {
+            showQuestion();
+        } else {
+            renderResult();
+        }
+    }
+
+    function goBack() {
+        if(currentIndex > 0) {
+            currentIndex--;
+            const last = history.pop();
+            scores[last]--;
+            showQuestion();
+        }
+    }
+
+    function renderResult() {
+        document.getElementById('quiz-screen').classList.remove('active');
+        document.getElementById('result-screen').classList.add('active');
+        localStorage.removeItem('mbti_snapshot');
+
+        const res = [
+            scores.E >= scores.I ? 'E' : 'I',
+            scores.S >= scores.N ? 'S' : 'N',
+            scores.T >= scores.F ? 'T' : 'F',
+            scores.J >= scores.P ? 'J' : 'P'
+        ].join('');
+
+        const data = mbtiData[res];
+        document.getElementById('res-icon').innerText = data.icon;
+        document.getElementById('res-code').innerText = res;
+        document.getElementById('res-name').innerText = data.name;
+        document.getElementById('res-desc').innerText = data.desc;
+        document.getElementById('res-career').innerText = data.career;
+
+        let tagsHtml = '';
+        data.tags.forEach(t => tagsHtml += `<span class="tag"># ${t}</span>`);
+        document.getElementById('res-tags').innerHTML = tagsHtml;
+
+        const dims = [['E','I','精力'], ['S','N','感知'], ['T','F','逻辑'], ['J','P','生活']];
+        let barsHtml = '';
+        dims.forEach(d => {
+            const pA = Math.round(scores[d[0]] / (scores[d[0]] + scores[d[1]]) * 100);
+            barsHtml += `
+                <div class="stat-row">
+                    <div class="stat-labels"><span>${d[0]} (${pA}%)</span><span>${d[2]}</span><span>${d[1]} (${100-pA}%)</span></div>
+                    <div class="stat-bar-outer">
+                        <div style="width:${pA}%; background:white; height:100%;"></div>
+                        <div style="width:${100-pA}%; background:rgba(255,255,255,0.2); height:100%;"></div>
+                    </div>
+                </div>
+            `;
+        });
+        document.getElementById('res-bars').innerHTML = barsHtml;
+    }
+
+    function resetTest() {
+        currentIndex = 0;
+        scores = { E:0, I:0, S:0, N:0, T:0, F:0, J:0, P:0 };
+        history = [];
+        document.getElementById('result-screen').classList.remove('active');
+        document.getElementById('welcome-screen').classList.add('active');
+    }
+
+    document.getElementById('resume-btn').onclick = () => {
+        const saved = localStorage.getItem('mbti_snapshot');
+        if(saved) {
+            const data = JSON.parse(saved);
+            currentIndex = data.currentIndex;
+            scores = data.scores;
+            history = data.history;
+            startTest();
+        }
+    }
+</script>
+
+</body>
+</html>
